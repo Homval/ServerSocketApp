@@ -1,13 +1,14 @@
 package ru.khomyakov;
 
+
+
+import java.io.IOException;
+
 public class Main {
-    public static void main( String[] args ) throws InterruptedException {
+    public static void main( String[] args ) throws IOException {
         ThreadPoolServer server = new ThreadPoolServer();
-        Thread workerThread = new Thread(server);
-        workerThread.start();
+        server.run();
 
-        System.out.println("Server started");
 
-        workerThread.join();
     }
 }

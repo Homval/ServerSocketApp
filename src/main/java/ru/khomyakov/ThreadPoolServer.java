@@ -1,45 +1,39 @@
 package ru.khomyakov;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 
 
 public class ThreadPoolServer implements Runnable {
-    private ServerSocket serverSocket = null;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private static boolean isStopped = false;
+    private ServerSocket serverSocket;
+    InetAddress inetAddress = InetAddress.getByName(null);
 
+    public ThreadPoolServer() throws IOException {
+        serverSocket = new ServerSocket(5050, 10, inetAddress);
+        System.out.println("Server started");
+//        run();
+    }
 
     @Override
     public void run() {
-        openServerSocket();
-        while (!isStopped) {
+        while (true) {
             try (Socket clientSocket = serverSocket.accept()){
-                executorService.execute(new ServerWorker(clientSocket));
+                new ServerWorker(clientSocket);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        executorService.shutdown();
     }
 
-    private void openServerSocket() {
-        try {
-            int serverPort = 5050;
-            serverSocket = new ServerSocket(serverPort);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static class ServerWorker implements Runnable{
+    class ServerWorker implements Runnable{
         Socket socket;
 
         public ServerWorker(Socket socket) {
             this.socket = socket;
+            run();
         }
 
         @Override
@@ -47,12 +41,12 @@ public class ThreadPoolServer implements Runnable {
             try{
                 BufferedReader is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-                String line = is.readLine();
-                if (line.equals("Bye")) {
-                    isStopped = true;
-                    return;
+                String line;
+                while (!(line = is.readLine()).equals("Bye")) {
+                    System.out.println(line);
+                    out.println(line);
                 }
-                out.println(line);
+                socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
